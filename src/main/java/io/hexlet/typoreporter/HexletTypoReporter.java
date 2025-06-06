@@ -16,9 +16,18 @@ import static java.util.Optional.ofNullable;
 public class HexletTypoReporter {
 
     public static void main(String[] args) {
-        Dotenv dotenv = Dotenv.load();
-        System.setProperty("VK_CLIENT_ID", dotenv.get("VK_CLIENT_ID"));
-        System.setProperty("VK_CLIENT_SECRET", dotenv.get("VK_CLIENT_SECRET"));
+        String vkClientId = System.getenv("VK_CLIENT_ID");
+        String vkClientSecret = System.getenv("VK_CLIENT_SECRET");
+
+        if (vkClientId != null) {
+            System.setProperty("VK_CLIENT_ID", vkClientId);
+        }
+        if (vkClientSecret != null) {
+            System.setProperty("VK_CLIENT_SECRET", vkClientSecret);
+        }
+//        Dotenv dotenv = Dotenv.load();
+//        System.setProperty("VK_CLIENT_ID", dotenv.get("VK_CLIENT_ID"));
+//        System.setProperty("VK_CLIENT_SECRET", dotenv.get("VK_CLIENT_SECRET"));
         final var env = SpringApplication.run(HexletTypoReporter.class, args).getEnvironment();
         logApplicationStartup(env);
     }
