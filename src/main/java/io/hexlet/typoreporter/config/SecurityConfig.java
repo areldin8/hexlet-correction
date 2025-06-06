@@ -4,6 +4,7 @@ import io.hexlet.typoreporter.handler.exception.ForbiddenDomainException;
 import io.hexlet.typoreporter.handler.exception.WorkspaceNotFoundException;
 import io.hexlet.typoreporter.security.service.AccountDetailService;
 import io.hexlet.typoreporter.security.service.SecuredWorkspaceService;
+import io.hexlet.typoreporter.service.oauth2vk.CustomOAuth2UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +16,7 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,6 +39,9 @@ import static org.springframework.http.HttpMethod.POST;
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
+
+    @Value("${spring.security.oauth2.enable:true}")
+    private boolean isOauth2Enable;
 
     @Bean
     public PasswordEncoder bCryptPasswordEncoder() {
@@ -78,7 +83,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
                                    SecurityContextRepository securityContextRepository,
-                                   DynamicCorsConfigurationSource dynamicCorsConfigurationSource) throws Exception {
+                                   DynamicCorsConfigurationSource dynamicCorsConfigurationSource,
+                                           CustomOAuth2UserService customOAuth2UserService) throws Exception {
         http.httpBasic();
         http.cors();
         http.exceptionHandling().accessDeniedHandler(accessDeniedHandler());
@@ -86,7 +92,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests(authz -> authz
                 .requestMatchers(GET, "/webjars/**", "/widget/**", "/fragments/**", "/img/**",
                     "/favicon.ico").permitAll()
-                .requestMatchers("/", "/login", "/signup", "/error", "/about").permitAll()
+                .requestMatchers("/", "/login", "/oauth2/**", "/signup", "/error", "/about").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(login -> login
@@ -102,7 +108,15 @@ public class SecurityConfig {
                 )
             )
             .addFilterBefore(corsFilter(dynamicCorsConfigurationSource), CorsFilter.class);
-
+        if (isOauth2Enable) {
+            http.oauth2Login(oauth -> oauth
+                .loginPage("/login")
+                .userInfoEndpoint(userInfo ->
+                    userInfo.userService(customOAuth2UserService))
+                .defaultSuccessUrl("/workspaces", true)
+                .redirectionEndpoint()
+                .baseUri("/login/oauth2/code/*"));
+        }
         http.securityContext().securityContextRepository(securityContextRepository);
 
         http.headers().frameOptions().disable();
@@ -117,6 +131,7 @@ public class SecurityConfig {
     @Bean
     public CorsFilter corsFilter(DynamicCorsConfigurationSource dynamicCorsConfigurationSource) {
         return new CorsFilter(new CorsConfigurationSource() {
+
             @Override
             public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                 if (request.getRequestURI().startsWith("/api/workspaces/")) {

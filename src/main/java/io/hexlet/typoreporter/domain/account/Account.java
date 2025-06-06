@@ -79,6 +79,9 @@ public class Account extends AbstractAuditingEntity implements Identifiable<Long
     @Size(max = 50)
     private String lastName;
 
+    @Column(name = "vk_id", unique = true)
+    private String vkId;
+
     @OneToMany(mappedBy = "account", cascade = ALL, orphanRemoval = true)
     @ToString.Exclude
     private Set<WorkspaceRole> workspaceRoles = new HashSet<>();

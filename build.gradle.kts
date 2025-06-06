@@ -49,6 +49,10 @@ dependencies {
     implementation("org.mapstruct:mapstruct:1.5.3.Final")
     // Annotation processors
     annotationProcessor("org.mapstruct:mapstruct-processor:1.5.3.Final")
+    //Authorisation
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("io.github.cdimascio:dotenv-java:3.2.0")
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
