@@ -1,6 +1,5 @@
 package io.hexlet.typoreporter;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -25,9 +24,7 @@ public class HexletTypoReporter {
         if (vkClientSecret != null) {
             System.setProperty("VK_CLIENT_SECRET", vkClientSecret);
         }
-//        Dotenv dotenv = Dotenv.load();
-//        System.setProperty("VK_CLIENT_ID", dotenv.get("VK_CLIENT_ID"));
-//        System.setProperty("VK_CLIENT_SECRET", dotenv.get("VK_CLIENT_SECRET"));
+
         final var env = SpringApplication.run(HexletTypoReporter.class, args).getEnvironment();
         logApplicationStartup(env);
     }

@@ -32,6 +32,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
@@ -109,13 +110,17 @@ public class SecurityConfig {
             )
             .addFilterBefore(corsFilter(dynamicCorsConfigurationSource), CorsFilter.class);
         if (isOauth2Enable) {
-            http.oauth2Login(oauth -> oauth
-                .loginPage("/login")
-                .userInfoEndpoint(userInfo ->
-                    userInfo.userService(customOAuth2UserService))
-                .defaultSuccessUrl("/workspaces", true)
-                .redirectionEndpoint()
-                .baseUri("/login/oauth2/code/*"));
+            http.oauth2Login(oauth -> {
+                oauth.loginPage("/login")
+                    .userInfoEndpoint(userInfo ->
+                        userInfo.userService(customOAuth2UserService))
+                    .defaultSuccessUrl("/workspaces", true)
+                    .redirectionEndpoint()
+                    .baseUri("/login/oauth2/code/*");
+
+                oauth.authorizationEndpoint(authorisation ->
+                    authorisation.baseUri("/oauth2/authorization"));
+            });
         }
         http.securityContext().securityContextRepository(securityContextRepository);
 
@@ -131,14 +136,25 @@ public class SecurityConfig {
     @Bean
     public CorsFilter corsFilter(DynamicCorsConfigurationSource dynamicCorsConfigurationSource) {
         return new CorsFilter(new CorsConfigurationSource() {
-
             @Override
             public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
-                if (request.getRequestURI().startsWith("/api/workspaces/")) {
-                    CorsConfiguration config = dynamicCorsConfigurationSource.getCorsConfiguration(request);
 
+                if (request.getRequestURI().startsWith("/api/workspaces/")) {
+                    return dynamicCorsConfigurationSource.getCorsConfiguration(request);
+                }
+
+                if (request.getRequestURI().startsWith("/login/oauth2/code/vk")) {
+                    CorsConfiguration config = new CorsConfiguration();
+                    config.setAllowedOrigins(List.of(
+                        "https://oauth.vk.com",
+                        "https://937b1fc19272be.lhr.life",
+                        "http://localhost:8080"
+                    ));
+                    config.setAllowedMethods(List.of("GET", "POST"));
+                    config.setAllowCredentials(true);
                     return config;
                 }
+
                 return null;
             }
 

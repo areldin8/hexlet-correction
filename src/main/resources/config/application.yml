@@ -15,12 +15,14 @@ spring:
             redirect-uri: "{baseUrl}/login/oauth2/code/vk"
             scope: email
             client-name: VK
+            client-authentication-method: post
+            provider: vk
         provider:
           vk:
-            authorization-uri: https://oauth.vk.com/authorize
+            authorization-uri: https://oauth.vk.com/authorize?v=5.131
             token-uri: https://oauth.vk.com/access_token
-            user-info-uri: https://api.vk.com/method/users.get?fields=email,first_name,last_name,photo_200
-            user-name-attribute: login
+            user-info-uri: https://api.vk.com/method/users.get?fields=email,first_name,last_name,photo_200&v=5.131
+            user-name-attribute: email
   jpa:
     open-in-view: false
     hibernate:
