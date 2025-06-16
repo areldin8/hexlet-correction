@@ -40,7 +40,7 @@ dependencies {
     implementation("org.webjars:bootstrap:5.2.3")
     implementation("nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.3.0")
     // Database
-    runtimeOnly("org.postgresql:postgresql:42.5.4")
+    runtimeOnly("org.postgresql:postgresql:42.5.5")
     implementation("io.hypersistence:hypersistence-utils-hibernate-60:3.2.0")
     implementation("org.liquibase:liquibase-core:4.26.0")
     // Utils
@@ -53,6 +53,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("io.github.cdimascio:dotenv-java:3.2.0")
+    implementation("org.antlr:antlr4-runtime:4.10.1")
+    implementation("org.springframework.session:spring-session-core")
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")

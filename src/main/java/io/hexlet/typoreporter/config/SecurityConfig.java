@@ -4,7 +4,7 @@ import io.hexlet.typoreporter.handler.exception.ForbiddenDomainException;
 import io.hexlet.typoreporter.handler.exception.WorkspaceNotFoundException;
 import io.hexlet.typoreporter.security.service.AccountDetailService;
 import io.hexlet.typoreporter.security.service.SecuredWorkspaceService;
-import io.hexlet.typoreporter.service.oauth2vk.CustomOAuth2UserService;
+import io.hexlet.typoreporter.service.oauth2vk.VkOAuth2UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,10 +16,10 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
@@ -32,7 +32,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import java.io.IOException;
-import java.util.List;
 
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
@@ -40,9 +39,6 @@ import static org.springframework.http.HttpMethod.POST;
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
-
-    @Value("${spring.security.oauth2.enable:true}")
-    private boolean isOauth2Enable;
 
     @Bean
     public PasswordEncoder bCryptPasswordEncoder() {
@@ -85,7 +81,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http,
                                    SecurityContextRepository securityContextRepository,
                                    DynamicCorsConfigurationSource dynamicCorsConfigurationSource,
-                                           CustomOAuth2UserService customOAuth2UserService) throws Exception {
+                                           VkOAuth2UserService vkOAuth2UserService) throws Exception {
         http.httpBasic();
         http.cors();
         http.exceptionHandling().accessDeniedHandler(accessDeniedHandler());
@@ -93,7 +89,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests(authz -> authz
                 .requestMatchers(GET, "/webjars/**", "/widget/**", "/fragments/**", "/img/**",
                     "/favicon.ico").permitAll()
-                .requestMatchers("/", "/login", "/oauth2/**", "/signup", "/error", "/about").permitAll()
+                .requestMatchers("/", "/login", "/signup", "/error", "/about", "/oauth2/**").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(login -> login
@@ -108,25 +104,19 @@ public class SecurityConfig {
                     new AntPathRequestMatcher("/typo/form/*", POST.name())
                 )
             )
+            .oauth2Login(oauth2 -> oauth2
+                .loginPage("/login")
+                .userInfoEndpoint(userInfo -> userInfo.userService(vkOAuth2UserService))
+                .defaultSuccessUrl("/workspaces", true)
+            )
             .addFilterBefore(corsFilter(dynamicCorsConfigurationSource), CorsFilter.class);
-        if (isOauth2Enable) {
-            http.oauth2Login(oauth -> {
-                oauth.loginPage("/login")
-                    .userInfoEndpoint(userInfo ->
-                        userInfo.userService(customOAuth2UserService))
-                    .defaultSuccessUrl("/workspaces", true)
-                    .redirectionEndpoint()
-                    .baseUri("/login/oauth2/code/*");
 
-                oauth.authorizationEndpoint(authorisation ->
-                    authorisation.baseUri("/oauth2/authorization"));
-            });
-        }
         http.securityContext().securityContextRepository(securityContextRepository);
 
         http.headers().frameOptions().disable();
         return http.build();
     }
+
 
     @Bean
     public AccessDeniedHandler accessDeniedHandler() {
@@ -138,23 +128,10 @@ public class SecurityConfig {
         return new CorsFilter(new CorsConfigurationSource() {
             @Override
             public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
-
                 if (request.getRequestURI().startsWith("/api/workspaces/")) {
-                    return dynamicCorsConfigurationSource.getCorsConfiguration(request);
-                }
-
-                if (request.getRequestURI().startsWith("/login/oauth2/code/vk")) {
-                    CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of(
-                        "https://oauth.vk.com",
-                        "https://937b1fc19272be.lhr.life",
-                        "http://localhost:8080"
-                    ));
-                    config.setAllowedMethods(List.of("GET", "POST"));
-                    config.setAllowCredentials(true);
+                    CorsConfiguration config = dynamicCorsConfigurationSource.getCorsConfiguration(request);
                     return config;
                 }
-
                 return null;
             }
 

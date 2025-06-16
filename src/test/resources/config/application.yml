@@ -3,7 +3,21 @@ spring:
     name: hexletTypoReporter
   security:
     oauth2:
-      enable: false
+      client:
+        registration:
+          vk:
+            client-id: mock-vk-client
+            client-secret: mock-secret
+            redirect-uri: http://localhost:8080
+            authorization-grant-type: authorization_code
+            scope: email
+            client-name: VK
+        provider:
+          vk:
+            authorization-uri: https://oauth.vk.com/authorize
+            token-uri: https://oauth.vk.com/access_token
+            user-info-uri: https://api.vk.com/method/users.get?fields=email,first_name,last_name
+            user-name-attribute: login
   jpa:
     open-in-view: true
     show-sql: true

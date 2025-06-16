@@ -1,10 +1,12 @@
 package io.hexlet.typoreporter.service.mapper;
 
 import io.hexlet.typoreporter.domain.account.Account;
+
 import io.hexlet.typoreporter.service.account.signup.SignupAccount;
 import io.hexlet.typoreporter.service.dto.account.InfoAccount;
 import io.hexlet.typoreporter.service.dto.account.UpdateProfile;
 import org.mapstruct.Mapper;
+
 import org.mapstruct.MappingTarget;
 
 @Mapper
@@ -17,4 +19,5 @@ public interface AccountMapper {
     Account toAccount(UpdateProfile source, @MappingTarget Account account);
 
     Account toAccount(SignupAccount source);
+
 }

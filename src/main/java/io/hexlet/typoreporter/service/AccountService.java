@@ -32,7 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -58,28 +57,51 @@ public class AccountService implements SignupAccountUseCase, QueryAccount {
         return accountRepository.existsByEmail(email);
     }
 
+    @Transactional(readOnly = true)
+    public boolean existsByExternalId(String externalId) {
+        return accountRepository.existsByExternalId(externalId);
+    }
+
     @Override
     public InfoAccount signup(SignupAccount signupAccount) throws UsernameAlreadyExistException,
         EmailAlreadyExistException {
+
+        if (signupAccount.password() == null) {
+            if (signupAccount.externalId() != null && existsByExternalId(signupAccount.externalId())) {
+                throw new AccountAlreadyExistException("externalId", signupAccount.externalId());
+            }
+
+            final var accToSave = accountMapper.toAccount(signupAccount);
+            accToSave.setEmail(signupAccount.email());
+            accToSave.setUsername(signupAccount.username());
+
+            accountRepository.save(accToSave);
+            return accountMapper.toInfoAccount(accToSave);
+        }
+
         final String normalizedEmail = TextUtils.toLowerCaseData(signupAccount.email());
         final String normalizedUsername = TextUtils.toLowerCaseData(signupAccount.username());
+
         if (existsByEmail(normalizedEmail)) {
             throw new EmailAlreadyExistException(normalizedEmail);
         }
         if (existsByUsername(normalizedUsername)) {
             throw new UsernameAlreadyExistException(normalizedUsername);
         }
+
         final var accToSave = accountMapper.toAccount(signupAccount);
         accToSave.setEmail(normalizedEmail);
         accToSave.setUsername(normalizedUsername);
         accToSave.setPassword(passwordEncoder.encode(signupAccount.password()));
+
         if (accToSave.getAuthProvider() == null) {
             accToSave.setAuthProvider(AuthProvider.EMAIL);
-        }
+         } //
+
         CustomUserDetails accountDetail = new CustomUserDetails(
             normalizedEmail,
             accToSave.getPassword(),
-            normalizedUsername,
+            accToSave.getUsername(),
             List.of(new SimpleGrantedAuthority("ROLE_USER"))
         );
 
@@ -157,4 +179,5 @@ public class AccountService implements SignupAccountUseCase, QueryAccount {
         accountRepository.save(sourceAccount);
         return sourceAccount;
     }
+
 }

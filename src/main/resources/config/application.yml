@@ -1,28 +1,6 @@
 spring:
   application:
     name: hexletTypoReporter
-  profiles:
-    active: dev
-  security:
-    require-ssl: false
-    oauth2:
-      client:
-        registration:
-          vk:
-            client-id: ${VK_CLIENT_ID}
-            client-secret: ${VK_CLIENT_SECRET}
-            authorization-grant-type: authorization_code
-            redirect-uri: "{baseUrl}/login/oauth2/code/vk"
-            scope: email
-            client-name: VK
-            client-authentication-method: post
-            provider: vk
-        provider:
-          vk:
-            authorization-uri: https://oauth.vk.com/authorize?v=5.131
-            token-uri: https://oauth.vk.com/access_token
-            user-info-uri: https://api.vk.com/method/users.get?fields=email,first_name,last_name,photo_200&v=5.131
-            user-name-attribute: email
   jpa:
     open-in-view: false
     hibernate:
@@ -35,4 +13,24 @@ spring:
         enabled: true
     problemdetails:
       enabled: true
-
+  security:
+    oauth2:
+      client:
+        registration:
+          vk:
+            client-id: ${VK_CLIENT_ID}
+            client-secret: ${VK_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope: email
+            client-name: VK
+        provider:
+          vk:
+            authorization-uri: https://oauth.vk.com/authorize
+            token-uri: https://oauth.vk.com/access_token
+            user-info-uri: https://api.vk.com/method/users.get?fields=email,first_name,last_name&v=5.131
+            user-name-attribute: id
+  logging:
+    level:
+      org.springframework.security.oauth2.client: DEBUG
+      org.springframework.web.client.RestTemplate: DEBUG

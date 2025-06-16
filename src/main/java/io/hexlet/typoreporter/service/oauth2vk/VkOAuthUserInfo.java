@@ -1,10 +1,5 @@
 package io.hexlet.typoreporter.service.oauth2vk;
 
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpHeaders;
-import org.springframework.web.reactive.function.client.WebClient;
-
-import java.util.List;
 import java.util.Map;
 
 public class VkOAuthUserInfo implements OAuth2UserInfo {
@@ -13,32 +8,14 @@ public class VkOAuthUserInfo implements OAuth2UserInfo {
     private final Map<String, Object> attributes;
 
     public VkOAuthUserInfo(String accessToken, Map<String, Object> attributes) {
-        this.accessToken = accessToken;
+
         this.attributes = attributes;
+        this.accessToken = accessToken;
     }
 
     @Override
     public String getEmail() {
-        var email = attributes.get("email");
-        if (email == null) {
-            WebClient webClient = WebClient.builder()
-                .baseUrl("https://vk.com")
-                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                .build();
-
-            List<Map<String, Object>> emails = webClient.get()
-                .uri("/user/emails")
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() { })
-                .block();
-
-            email = emails.stream()
-                .filter(e -> Boolean.TRUE.equals(e.get("primary")))
-                .map(e -> (String) e.get("email"))
-                .findFirst()
-                .orElse(null);
-        }
-        return (String) email;
+        return (String) attributes.get("default_email");
     }
 
     @Override
@@ -46,10 +23,10 @@ public class VkOAuthUserInfo implements OAuth2UserInfo {
         return attributes.get("login").toString();
     }
 
-    @Override
-    public String getPassword() {
-        return "";
-    }
+//    @Override
+//    public String getPassword() {
+//        return "";
+//    }
 
     @Override
     public String getFirstName() {
@@ -61,6 +38,11 @@ public class VkOAuthUserInfo implements OAuth2UserInfo {
     public String getLastName() {
         String[] names = attributes.get("name").toString().split(" ");
         return names.length > 1 ? names[1] : "";
+    }
+
+    @Override
+    public String getId() {
+        return String.valueOf(attributes.get("id"));
     }
 
     @Override

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- 1. Добавляем VK в enum auth_provider -->
+    <changeSet id="2025-06-04-01-add-vk-auth-provider" author="areldin8">
+        <sql>ALTER TYPE auth_provider ADD VALUE 'VK';</sql>
+        <rollback>
+            <sql>
+                -- Создаем временный тип и переносим данные
+                CREATE TYPE auth_provider_temp AS ENUM ('EMAIL', 'GOOGLE', 'GITHUB');
+                ALTER TABLE account ALTER COLUMN auth_provider TYPE TEXT;
+                ALTER TABLE account ALTER COLUMN auth_provider TYPE auth_provider_temp
+                USING auth_provider::text::auth_provider_temp;
+                DROP TYPE auth_provider;
+                ALTER TYPE auth_provider_temp RENAME TO auth_provider;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- 2. Добавляем колонку для хранения VK ID -->
+    <changeSet id="2025-06-04-02-add-external-id-column" author="areldin8">
+        <addColumn tableName="account">
+            <column name="external_id" type="VARCHAR(255)" remarks="ID from OAuth2 provider like VK">
+                <constraints nullable="true" unique="true"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="account" columnName="external_id"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 3. Создаем индекс для быстрого поиска по external_id -->
+    <changeSet id="2025-06-04-03-create-external-id-index" author="areldin8">
+        <createIndex tableName="account" indexName="idx_account_external_id">
+            <column name="external_id"/>
+        </createIndex>
+        <rollback>
+            <dropIndex tableName="account" indexName="idx_account_external_id"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

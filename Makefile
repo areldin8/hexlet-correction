@@ -1,4 +1,4 @@
-.PHONY: build
+ma.PHONY: build
 
 build:
 	./gradlew clean check
