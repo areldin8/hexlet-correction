@@ -26,12 +26,14 @@ spring:
     password: ${JDBC_DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
-    show-sql: false
+    show-sql: true
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate
   thymeleaf:
     cache: true
   liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
     contexts: prod
 server:
   port: 8080

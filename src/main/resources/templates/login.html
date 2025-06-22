@@ -24,16 +24,52 @@
         </div>
     </div>
     <div class="row mt-4">
-        <div class="col">
-            <!-- Стандартная кнопка авторизации через VK -->
-            <a class="btn btn-primary"
-               th:href="@{/oauth2/authorization/vk}"
-               style="background-color: #07F; color: white;">
-                <i class="bi bi-vk"></i>
-                <span th:text="#{link.vk-create-account}"></span>
-            </a>
+        <div>
+            <script src="https://unpkg.com/@vkid/sdk@<3.0.0/dist-sdk/umd/index.js"></script>
+            <script type="text/javascript">
+                if ('VKIDSDK' in window) {
+                  const VKID = window.VKIDSDK;
+
+                  VKID.Config.init({
+                    app: 53673397,
+                    redirectUrl: 'https://805e4eb02d8bb8.lhr.life/login/oauth2/code/',
+                    responseMode: VKID.ConfigResponseMode.Callback,
+                    source: VKID.ConfigSource.LOWCODE,
+                    scope: '', // Заполните нужными доступами по необходимости
+                  });
+
+                  const oAuth = new VKID.OAuthList();
+
+                  oAuth.render({
+                    container: document.currentScript.parentElement,
+                    styles: {
+                      borderRadius: 0,
+                      height: 32
+                    },
+                    oauthList: [
+                      'vkid'
+                    ]
+                  })
+                  .on(VKID.WidgetEvents.ERROR, vkidOnError)
+                  .on(VKID.OAuthListInternalEvents.LOGIN_SUCCESS, function (payload) {
+                    const code = payload.code;
+                    const deviceId = payload.device_id;
+
+                    VKID.Auth.exchangeCode(code, deviceId)
+                      .then(vkidOnSuccess)
+                      .catch(vkidOnError);
+                  });
+
+                  function vkidOnSuccess(data) {
+                    // Обработка полученного результата
+                  }
+
+                  function vkidOnError(error) {
+                    // Обработка ошибки
+                  }
+                }
+            </script>
         </div>
-    </div>
     <div class="row">
         <div class="mt-4">
             <a class="link-primary" th:href="@{/signup}" th:text="#{link.signup}"></a>
