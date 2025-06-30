@@ -13,6 +13,9 @@
 logging:
   level:
     ROOT: INFO
+    org.springframework: DEBUG
+    org.hibernate: DEBUG
+    com.zaxxer.hikari: DEBUG
 
 spring:
   devtools:
@@ -21,9 +24,7 @@ spring:
     livereload:
       enabled: false
   datasource:
-    url: ${JDBC_DATABASE_URL}
-    username: ${JDBC_DATABASE_USERNAME}
-    password: ${JDBC_DATABASE_PASSWORD}
+    url: jdbc:${DATABASE_URL}
     driver-class-name: org.postgresql.Driver
   jpa:
     show-sql: true
@@ -32,9 +33,7 @@ spring:
   thymeleaf:
     cache: true
   liquibase:
-    enabled: true
-    change-log: classpath:db/changelog/db.changelog-master.xml
-    contexts: prod
+    enabled: false
 server:
   port: 8080
   compression:
@@ -43,3 +42,4 @@ server:
     min-response-size: 1024
   error:
     include-stacktrace: never
+
