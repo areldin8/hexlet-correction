@@ -130,9 +130,17 @@ public class SecurityConfig {
             public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                 if (request.getRequestURI().startsWith("/api/workspaces/")) {
                     CorsConfiguration config = dynamicCorsConfigurationSource.getCorsConfiguration(request);
+                    // Добавляем разрешенный домен Render
+                    assert config != null;
+                    config.addAllowedOrigin("https://hexlet-correction-1.onrender.com");
                     return config;
                 }
-                return null;
+                CorsConfiguration defaultConfig = new CorsConfiguration();
+                defaultConfig.addAllowedOrigin("https://hexlet-correction-1.onrender.com");
+                defaultConfig.addAllowedMethod("*");
+                defaultConfig.addAllowedHeader("*");
+                defaultConfig.setAllowCredentials(true);
+                return defaultConfig;
             }
 
         }) {
